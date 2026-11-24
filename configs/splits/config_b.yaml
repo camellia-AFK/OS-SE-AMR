@@ -1,0 +1,27 @@
+name: config_b
+dataset_path: data/RML2016.10a_dict.pkl
+seed: 42
+
+snr_min: 0
+snr_max: 18
+stress_snrs: [-10, -8, -6, -4, -2]
+
+ratios:
+  train: 0.6
+  val: 0.2
+  test: 0.2
+
+known_classes:
+  - "8PSK"
+  - "BPSK"
+  - "CPFSK"
+  - "GFSK"
+  - "PAM4"
+
+unknown_classes:
+  - "QAM16"
+  - "QPSK"
+  - "QAM64"
+  - "WBFM"
+  - "AM-DSB"
+  - "AM-SSB"

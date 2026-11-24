@@ -1,0 +1,49 @@
+name: rml2018_long_horizon
+dataset_path: data/rml2018_cache_1000.h5
+seed: 42
+max_per_cell: 1000
+
+snr_min: 0
+snr_max: 30
+stress_snrs: [-10, -8, -6, -4, -2]
+
+ratios:
+  train: 0.6
+  val: 0.2
+  test: 0.2
+
+known_classes:
+  - "BPSK"
+  - "QPSK"
+  - "8PSK"
+  - "16PSK"
+  - "4ASK"
+  - "16QAM"
+  - "32QAM"
+  - "16APSK"
+  - "32APSK"
+  - "FM"
+  - "GMSK"
+  - "OQPSK"
+
+unknown_classes:
+  - "OOK"
+  - "8ASK"
+  - "32PSK"
+  - "64QAM"
+  - "128QAM"
+  - "256QAM"
+  - "64APSK"
+  - "128APSK"
+  - "AM-DSB-WC"
+  - "AM-DSB-SC"
+  - "AM-SSB-WC"
+  - "AM-SSB-SC"
+
+arrival_orders:
+  order_5step:
+    - ["OOK", "64QAM"]
+    - ["128QAM", "AM-DSB-WC"]
+    - ["64APSK", "32PSK"]
+    - ["8ASK", "256QAM", "AM-DSB-SC"]
+    - ["128APSK", "AM-SSB-WC", "AM-SSB-SC"]

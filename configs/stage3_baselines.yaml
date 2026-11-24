@@ -1,0 +1,93 @@
+split_config_a: configs/splits/config_a.yaml
+split_config_b: configs/splits/config_b.yaml
+seed: 42
+device: cuda
+output_dir: outputs/stage3
+
+stage0_checkpoint_a: outputs/stage0/tldnn_config_a_seed42/checkpoints/best.pt
+stage1_osr_state_a: outputs/stage1/tldnn_ms_maha_config_a_seed42/checkpoints/osr_state.pt
+stage1_summary_a: outputs/stage1/summary_table1.json
+
+model:
+  name: tldnn
+  feature_dim: 64
+  dropout: 0.1
+  tldnn:
+    input_mode: iq_ap
+    d_model: 64
+    nhead: 4
+    num_transformer_layers: 2
+    lstm_hidden: 64
+    lstm_layers: 2
+
+train:
+  batch_size: 256
+  epochs: 50
+  lr: 1.0e-3
+  weight_decay: 1.0e-4
+  grad_clip: 1.0
+  early_stopping_patience: 12
+  num_workers: 0
+
+osr:
+  target_tpr: 0.95
+  arpl:
+    weight_pl: 0.1
+    temp: 1.0
+  ssd_amc:
+    lambda_supcon: 0.5
+    temp: 0.1
+    proj_dim: 64
+    noise_std: 0.03
+    max_shift: 4
+  mahalanobis:
+    layers:
+      - stem
+      - pre_ln
+    weights:
+      stem: 0.7
+      pre_ln: 0.3
+
+discovery:
+  samples_per_class: 1000
+  feature_mode: stem_preln
+  min_cluster_size: 50
+  min_samples: 20
+  silhouette_threshold: 0.45
+  core_prob_threshold: 0.50
+  core_top_ratio: 0.85
+
+continual:
+  exemplars_per_class: 100
+  selection_strategy: herding
+  epochs: 35
+  steps_per_epoch: 30
+  samples_per_class_per_step: 24
+  batch_size_new: 128
+  batch_size_old: 128
+  lr: 8.0e-4
+  weight_decay: 1.0e-4
+  grad_clip: 1.0
+  beta_feat: 0.05
+  beta_logit: 0.5
+  distill_temp: 2.0
+  use_rf_aug: true
+  bic_max_steal: 0.046
+  icarl:
+    epochs: 35
+    batch_size: 128
+    lr: 8.0e-4
+    lambda_kd: 1.0
+    distill_temp: 2.0
+  simplecil:
+    feature_layer: penult
+
+snr_drift:
+  train_snrs: [10, 12, 14, 16, 18]
+  regimes:
+    high_snr: [10, 12, 14, 16, 18]
+    mid_low_snr: [0, 2, 4, 6]
+    neg_snr: [-10, -8, -6, -4, -2]
+  all_eval_snrs: [-10, -8, -6, -4, -2, 0, 2, 4, 6, 8, 10, 12, 14, 16, 18]
+  evolution_order: order_a
+  samples_per_class: 1000

@@ -1,0 +1,31 @@
+split_config: configs/splits/config_a.yaml
+seed: 42
+device: cuda
+output_dir: outputs/stage0
+
+model:
+  name: tldnn
+  feature_dim: 64
+  dropout: 0.1
+  tldnn:
+    input_mode: iq_ap
+    d_model: 64
+    nhead: 4
+    num_transformer_layers: 2
+    lstm_hidden: 64
+    lstm_layers: 2
+  iqformer:
+    embed_dim: 64
+    depth: 2
+    num_heads: 4
+    stft_n_fft: 32
+    stft_hop: 8
+
+train:
+  batch_size: 256
+  epochs: 50
+  lr: 1.0e-3
+  weight_decay: 1.0e-4
+  grad_clip: 1.0
+  early_stopping_patience: 12
+  num_workers: 0

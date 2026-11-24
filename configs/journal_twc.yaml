@@ -1,0 +1,157 @@
+name: journal_twc
+seed: 42
+device: cuda
+use_amp: true
+output_dir: outputs/journal_twc
+
+splits:
+  rml2016a: configs/splits/config_a.yaml
+  rml2016a_clean10: configs/splits/config_a_clean10.yaml
+  rml2016a_config_b: configs/splits/config_b.yaml
+  rml2016b: configs/splits/rml2016b_config_a.yaml
+  rml2018: configs/splits/rml2018_long_horizon.yaml
+
+models:
+  tldnn_128:
+    name: tldnn
+    feature_dim: 64
+    dropout: 0.1
+    tldnn:
+      input_mode: iq_ap
+      d_model: 64
+      nhead: 4
+      num_transformer_layers: 2
+      lstm_hidden: 64
+      lstm_layers: 2
+      seq_len: 32
+  iqformer_128:
+    name: iqformer
+    feature_dim: 64
+    dropout: 0.1
+    iqformer:
+      embed_dim: 64
+      depth: 2
+      num_heads: 4
+      stft_n_fft: 32
+      stft_hop: 8
+  resnet1d_128:
+    name: resnet1d
+    feature_dim: 64
+    dropout: 0.1
+    resnet1d:
+      base_channels: 64
+  tldnn_1024:
+    name: tldnn
+    feature_dim: 64
+    dropout: 0.1
+    tldnn:
+      input_mode: iq_ap
+      d_model: 64
+      nhead: 4
+      num_transformer_layers: 2
+      lstm_hidden: 64
+      lstm_layers: 2
+      seq_len: 128
+  iqformer_1024:
+    name: iqformer
+    feature_dim: 64
+    dropout: 0.1
+    iqformer:
+      embed_dim: 64
+      depth: 2
+      num_heads: 4
+      stft_n_fft: 64
+      stft_hop: 16
+      seq_len: 128
+
+train:
+  batch_size: 512
+  epochs: 50
+  lr: 1.0e-3
+  weight_decay: 1.0e-4
+  grad_clip: 1.0
+  early_stopping_patience: 12
+  num_workers: 4
+  use_amp: true
+
+snr_estimator:
+  all_train_snrs: [-10, -8, -6, -4, -2, 0, 2, 4, 6, 8, 10, 12, 14, 16, 18]
+  rml2018_train_snrs: [-10, -8, -6, -4, -2, 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30]
+  epochs: 30
+  batch_size: 512
+  lr: 2.0e-3
+  weight_decay: 1.0e-4
+  patience: 8
+
+physics_maha:
+  layers: ["stem", "pre_ln", "physics"]
+  weights:
+    stem: 0.55
+    pre_ln: 0.25
+    physics: 0.20
+
+stream:
+  samples_per_class_main: 2000
+  samples_per_class_neg: 600
+  rml2018_samples_main: 600
+  rml2018_samples_neg: 200
+  known_ratio: 0.5
+
+closed_loop:
+  snr_threshold: 4.0
+  target_tpr: 0.90
+  ss_expand_factor: 4
+  ss_max_per_cluster: 2000
+  min_cluster_size: 100
+  min_samples: 20
+  silhouette_threshold: 0.40
+  core_prob_threshold: 0.75
+  core_top_ratio: 0.60
+  allow_single_cluster: true
+  merge_cosine_threshold: 0.80
+  min_cluster_silhouette: 0.40
+  min_cluster_cohesion: 0.85
+  ss_min_cluster_silhouette: 0.45
+  ss_min_cluster_cohesion: 0.90
+  ss_max_core_size: 450
+  include_physics: true
+  use_weight_align: true
+  replay_ss_discovered: true
+
+continual:
+  exemplars_per_class: 100
+  selection_strategy: herding
+  epochs: 35
+  steps_per_epoch: 30
+  samples_per_class_per_step: 24
+  batch_size_new: 256
+  batch_size_old: 256
+  lr: 8.0e-4
+  weight_decay: 1.0e-4
+  grad_clip: 1.0
+  beta_feat: 0.05
+  beta_logit: 0.5
+  distill_temp: 2.0
+  use_rf_aug: true
+  bic_max_steal: 0.046
+  lambda_ewc: 400.0
+  der_aux_weight: 0.5
+  icarl:
+    epochs: 35
+    batch_size: 256
+    lr: 8.0e-4
+    lambda_kd: 1.0
+    distill_temp: 2.0
+
+multiseed:
+  seeds: [42, 1024, 2025, 3407, 7777]
+
+sensitivity:
+  exemplars_per_class: [20, 50, 100, 200]
+  snr_threshold: [0.0, 2.0, 4.0, 6.0, 8.0]
+  merge_cosine_threshold: [0.65, 0.70, 0.75, 0.80, 0.85, 0.90]
+  known_ratio: [0.2, 0.5, 0.8]
+
+doco_plus:
+  cfo_norms: [0.0, 0.002, 0.005]
+  phase_noise_stds: [0.0, 0.02, 0.05]

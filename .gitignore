@@ -1,0 +1,35 @@
+# Datasets & heavy artifacts
+data/*.pkl
+data/*.dat
+data/*.hdf5
+data/*.h5
+data/*.tar.bz2
+data/*.part
+data/*.meta.json
+data/*.npy
+data/*.npz
+outputs/
+
+# Checkpoints & weights
+*.pt
+*.pth
+*.ckpt
+*.onnx
+
+# Python / Packaging / Tests
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# IDE / OS
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
