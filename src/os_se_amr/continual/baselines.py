@@ -54,17 +54,19 @@ class EWCLearner:
         fisher = {n: torch.zeros_like(p, device=device) for n, p in backbone.named_parameters() if p.requires_grad}
         loader = DataLoader(TensorDataset(old_x, old_y), batch_size=min(64, len(old_x)), shuffle=False)
         total = 0
-        for xb, yb in loader:
-            xb = xb.to(device, non_blocking=True)
-            yb = yb.to(device, non_blocking=True)
-            backbone.zero_grad(set_to_none=True)
-            logits, _ = backbone(xb)
-            loss = F.cross_entropy(logits, yb, reduction="sum")
-            loss.backward()
-            for n, p in backbone.named_parameters():
-                if p.requires_grad and p.grad is not None:
-                    fisher[n] += p.grad.detach() ** 2
-            total += len(xb)
+        # Disable cuDNN RNN kernel during eval-mode Fisher backward so BatchNorm/Dropout remain frozen on CUDA.
+        with torch.backends.cudnn.flags(enabled=False):
+            for xb, yb in loader:
+                xb = xb.to(device, non_blocking=True)
+                yb = yb.to(device, non_blocking=True)
+                backbone.zero_grad(set_to_none=True)
+                logits, _ = backbone(xb)
+                loss = F.cross_entropy(logits, yb, reduction="sum")
+                loss.backward()
+                for n, p in backbone.named_parameters():
+                    if p.requires_grad and p.grad is not None:
+                        fisher[n] += p.grad.detach() ** 2
+                total += len(xb)
         backbone.zero_grad(set_to_none=True)
         denom = float(max(1, total))
         return {k: (v / denom).detach() for k, v in fisher.items()}

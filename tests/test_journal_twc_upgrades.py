@@ -451,3 +451,26 @@ def test_significance_profiler_and_latex_exports(tmp_path: Path) -> None:
         assert len(paths) == 3
         for p in paths:
             assert p.exists() and p.stat().st_size > 0
+
+
+def test_ewc_wa_der_tldnn_cuda_rnn_backward() -> None:
+    dev = "cuda" if torch.cuda.is_available() else "cpu"
+    rng = np.random.default_rng(77)
+    cfg = {"name": "tldnn", "feature_dim": 32, "tldnn": {"d_model": 32, "lstm_hidden": 32, "seq_len": 32}}
+    rb = ReplayBuffer(exemplars_per_class=4, selection_strategy="random")
+    for cid in range(4):
+        rb.add_class_exemplars(cid, rng.normal(0.0, 0.3, size=(4, 2, 128)).astype(np.float32), seed=42)
+    x_new = rng.normal(0.3, 0.3, size=(8, 2, 128)).astype(np.float32)
+    y_new = np.repeat(np.arange(2), 4)
+
+    m_ewc = build_backbone(cfg, num_classes=4).to(dev)
+    rep_ewc = EWCLearner(epochs=1, batch_size=8, lambda_ewc=50.0).evolve(m_ewc, rb, x_new, y_new, device=dev, seed=42)
+    assert m_ewc.num_classes == 6 and np.isfinite(rep_ewc.final_loss)
+
+    m_wa = build_backbone(cfg, num_classes=4).to(dev)
+    rep_wa = WALearner(epochs=1, batch_size=8).evolve(m_wa, rb, x_new, y_new, device=dev, seed=42)
+    assert m_wa.num_classes == 6 and np.isfinite(rep_wa.final_loss)
+
+    m_der = build_backbone(cfg, num_classes=4).to(dev)
+    w_der, rep_der = DERLearner(epochs=1, batch_size=8).evolve(m_der, rb, x_new, y_new, cfg, device=dev, seed=42)
+    assert w_der.num_classes == 6 and np.isfinite(rep_der.final_loss)
