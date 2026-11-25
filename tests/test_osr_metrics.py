@@ -33,7 +33,8 @@ def _reference_bruteforce_oscr(
     for thr in thresholds:
         fprs.append(float((unknown_scores >= thr).mean()))
         ccrs.append(float((correct & (known_scores >= thr)).mean()))
-    return float(np.trapz(ccrs, fprs))
+    _trapz = getattr(np, "trapezoid", None) or getattr(np, "trapz")
+    return float(_trapz(ccrs, fprs))
 
 
 def test_osr_metrics_synthetic_boundaries() -> None:

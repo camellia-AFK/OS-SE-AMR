@@ -104,7 +104,8 @@ def compute_oscr(
     fpr_curve = np.concatenate([[0.0], fpr_pts])
     ccr_curve = np.concatenate([[0.0], ccr_pts])
 
-    oscr = float(np.trapz(ccr_curve, fpr_curve))
+    _trapz = getattr(np, "trapezoid", None) or getattr(np, "trapz")
+    oscr = float(_trapz(ccr_curve, fpr_curve))
     return oscr, fpr_curve, ccr_curve
 
 
